@@ -89,3 +89,4 @@ finally:
         logger.info("Database connection closed")
     except mysql.connector.Error as err:
         logger.error(f"Error closing the database connection: {err}")
+t

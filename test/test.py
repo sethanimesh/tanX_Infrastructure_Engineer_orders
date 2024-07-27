@@ -9,7 +9,7 @@ DB_USER = os.getenv('DB_USER', 'user')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
 DB_NAME = os.getenv('DB_NAME', 'orders')
 
-# Establish a connection to the MySQL database
+# Establish connection to the MySQL database
 try:
     connection = mysql.connector.connect(
         host=DB_HOST,
@@ -55,7 +55,7 @@ class TestOrderProcessingExtended(TestOrderProcessing):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.customer_revenue = cls.df.groupby('customer_id')['total_revenue'].sum().reset_index().sort_values(by 'total_revenue', ascending=False)
+        cls.customer_revenue = cls.df.groupby('customer_id')['total_revenue'].sum().reset_index().sort_values('total_revenue', ascending=False)
 
     def test_customer_revenue_calculation(self):
         """Test the revenue calculation for each customer."""
