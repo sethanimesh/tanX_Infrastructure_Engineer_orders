@@ -6,16 +6,20 @@ This project processes order data, calculates various metrics such as monthly re
 
 ## Project Structure
 
-/my_app
-  /task
-    Dockerfile
-    task_script.py
-    orders.csv
-  /test
-    Dockerfile
-    test_script.py
-docker-compose.yml
-
+```
+/repo
+    /task
+        Dockerfile
+        task_script.py
+        orders.csv
+    /test
+        Dockerfile
+        test_script.py
+    /db_init
+        init_db.sql
+        load_data.sh
+    docker-compose.yml
+```
 
 ## Setup Instructions
 
@@ -32,8 +36,9 @@ The task service processes the order data, performs data cleaning, and calculate
 
  ```
   cd /path/to/tanX_Infrastructure_Engineer_orders
-  Build and Run the Task Service:
 ```
+
+**Build and Run the Task Service:**
 
 ```
 docker-compose up --build task
@@ -78,6 +83,17 @@ Check the calculation of total revenue.
 Verify the extraction of month and year from order dates.
 Confirm the calculation of monthly,
 product, and customer revenue.
+
+## Additional Information
+
+### Database Initialization
+
+The MySQL database is initialized using the init_db.sql script, and data from the orders.csv file is loaded into the database using the load_data.sh script. These scripts are automatically executed when the MySQL container starts.
+
+### Configuration
+
+Database Configuration: The database connection settings (host, user, password, database name) can be configured via environment variables in the docker-compose.yml file.
+Environment Variables: Adjust the DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME variables as needed.
 
 ## Contact
 
