@@ -1,20 +1,39 @@
-version: '3'
+version: '3.8'
+
 services:
   task:
-    build: ./task
-    container_name: task_service
-    volumes:
-      - ./task:/app
-    
+    build:
+      context: ./task
+    networks:
+      - app-network
+    depends_on:
+      - db
 
   test:
-    build: ./test
-    container_name: test_service
-    volumes:
-      - ./test:/app
+    build:
+      context: ./test
+    networks:
+      - app-network
     depends_on:
-      - task
+      - db
+
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: orders
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db_init:/docker-entrypoint-initdb.d
+      - ./task/orders.csv:/var/lib/mysql-files/orders.csv
+    networks:
+      - app-network
 
 volumes:
-  task:
-  test:
+  db_data:
+
+networks:
+  app-network:
+    driver: overlay

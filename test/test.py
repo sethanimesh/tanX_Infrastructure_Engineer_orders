@@ -1,20 +1,35 @@
 import unittest
 import pandas as pd
-import numpy as np
+import mysql.connector
+import os
 
-# Load the processed data for testing
+# Database connection settings
+DB_HOST = os.getenv('DB_HOST', 'db')
+DB_USER = os.getenv('DB_USER', 'user')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
+DB_NAME = os.getenv('DB_NAME', 'orders')
+
+# Establish a connection to the MySQL database
 try:
-    df = pd.read_csv('orders_rearranged.csv')
-    df['order_date'] = pd.to_datetime(df['order_date'])
-    df['total_revenue'] = df['product_price'] * df['quantity']
-    df['month_year'] = df['order_date'].dt.to_period('M')
-except FileNotFoundError:
-    raise Exception("The file 'orders_rearranged.csv' was not found. Please ensure the task script ran correctly.")
+    connection = mysql.connector.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME
+    )
+    print("Connected to the database")
+except mysql.connector.Error as err:
+    print(f"Error: {err}")
+    exit(1)
 
 class TestOrderProcessing(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.df = df.copy()
+        query = "SELECT * FROM orders_table"
+        cls.df = pd.read_sql(query, connection)
+        cls.df['order_date'] = pd.to_datetime(cls.df['order_date'])
+        cls.df['total_revenue'] = cls.df['product_price'] * cls.df['quantity']
+        cls.df['month_year'] = cls.df['order_date'].dt.to_period('M')
         cls.monthly_revenue = cls.df.groupby('month_year')['total_revenue'].sum().reset_index()
 
     def test_order_date_conversion(self):
@@ -40,7 +55,7 @@ class TestOrderProcessingExtended(TestOrderProcessing):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.customer_revenue = cls.df.groupby('customer_id')['total_revenue'].sum().reset_index().sort_values(by='total_revenue', ascending=False)
+        cls.customer_revenue = cls.df.groupby('customer_id')['total_revenue'].sum().reset_index().sort_values(by 'total_revenue', ascending=False)
 
     def test_customer_revenue_calculation(self):
         """Test the revenue calculation for each customer."""
