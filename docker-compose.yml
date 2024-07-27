@@ -5,7 +5,16 @@ services:
     container_name: task_service
     volumes:
       - ./task:/app
+    
+
+  test:
+    build: ./test
+    container_name: test_service
+    volumes:
+      - ./test:/app
     depends_on:
-      - db
+      - task
+
 volumes:
   task:
+  test:
