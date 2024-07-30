@@ -1,92 +1,137 @@
 import pandas as pd
-import mysql.connector
-import os
-import logging
+import numpy as np
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+df = pd.read_csv('task/orders.csv')
+df.head()
 
-# Database connection settings
-DB_HOST = os.getenv('DB_HOST', 'db')
-DB_USER = os.getenv('DB_USER', 'user')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
-DB_NAME = os.getenv('DB_NAME', 'orders')
+column_mapping = {
+    'Order Number': 'order_id',
+    'Order Date': 'order_date',
+    'Item Name': 'product_name',
+    'Quantity': 'quantity',
+    'Product Price': 'product_price',
+    'Total products': 'total_products'
+}
 
-# Establish a connection to the MySQL database
-try:
-    connection = mysql.connector.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME
-    )
-    logger.info("Connected to the database")
-except mysql.connector.Error as err:
-    logger.error(f"Error connecting to the database: {err}")
-    exit(1)
+df.rename(columns=column_mapping, inplace=True)
 
-try:
-    # Load the data from the MySQL database
-    query = "SELECT * FROM orders_table"
-    df = pd.read_sql(query, connection)
+df.head()
 
-    # Process the data
-    # Step 1: Rename Columns (if necessary)
-    column_mapping = {
-        'order_id': 'order_id',
-        'order_date': 'order_date',
-        'product_name': 'product_name',
-        'quantity': 'quantity',
-        'product_price': 'product_price'
-    }
+unique_products = df['product_name'].unique()
 
-    df.rename(columns=column_mapping, inplace=True)
+# Create a mapping from product names to product IDs
+product_id_mapping = {product: idx + 1 for idx, product in enumerate(unique_products)}
 
-    # Step 2: Assign Product IDs
-    unique_products = df['product_name'].unique()
-    product_id_mapping = {product: idx + 1 for idx, product in enumerate(unique_products)}
-    df['product_id'] = df['product_name'].map(product_id_mapping)
+# Add a new column 'product_id' based on the product_name
+df['product_id'] = df['product_name'].map(product_id_mapping)
 
-    # Step 3: Generate Customer IDs and Map to Orders
-    num_customers = 100
-    customer_ids = [f'cust_{i:04d}' for i in range(num_customers)]
-    order_ids = df['order_id'].unique()
-    assigned_customer_ids = np.random.choice(customer_ids, size=len(order_ids), replace=True)
-    order_to_customer_map = dict(zip(order_ids, assigned_customer_ids))
-    df['customer_id'] = df['order_id'].map(order_to_customer_map)
+df.columns
 
-    # Step 4: Data Cleaning
-    df['order_date'] = pd.to_datetime(df['order_date'], errors='coerce')
-    df.dropna(subset=['order_date'], inplace=True)
-    df = df[df['product_price'] > 0]
-    df = df[df['quantity'] > 0]
+# Step 1: Generate hypothetical customer IDs
+num_customers = 100  # Adjust this number based on the desired number of unique customers
+customer_ids = [f'cust_{i:04d}' for i in range(num_customers)]
 
-    # Task: Calculate Metrics
-    df['total_revenue'] = df['product_price'] * df['quantity']
-    df['month_year'] = df['order_date'].dt.to_period('M')
+# Step 2: Map order IDs to customer IDs
+order_ids = df['order_id'].unique()
+num_orders = len(order_ids)
 
-    monthly_revenue = df.groupby('month_year')['total_revenue'].sum().reset_index()
-    product_revenue = df.groupby('product_name')['total_revenue'].sum().reset_index().sort_values(by='total_revenue', ascending=False)
-    customer_revenue = df.groupby('customer_id')['total_revenue'].sum().reset_index().sort_values(by='total_revenue', ascending=False)
+# Ensure some customers are repeated
+assigned_customer_ids = np.random.choice(customer_ids, size=num_orders, replace=True)
 
-    # Output the metrics (you can also save these to the database or a file if needed)
-    logger.info("Monthly Revenue:")
-    logger.info(monthly_revenue)
-    logger.info("\nProduct Revenue:")
-    logger.info(product_revenue)
-    logger.info("\nCustomer Revenue:")
-    logger.info(customer_revenue)
+# Create a dictionary mapping order_id to customer_id
+order_to_customer_map = dict(zip(order_ids, assigned_customer_ids))
 
-except pd.io.sql.DatabaseError as db_err:
-    logger.error(f"Error querying the database: {db_err}")
-except Exception as e:
-    logger.error(f"An error occurred: {e}")
-finally:
-    # Close the database connection
-    try:
-        connection.close()
-        logger.info("Database connection closed")
-    except mysql.connector.Error as err:
-        logger.error(f"Error closing the database connection: {err}")
-t
+# Step 3: Assign customer IDs to the dataset
+df['customer_id'] = df['order_id'].map(order_to_customer_map)
+
+# Display the updated dataset
+df.head(10)
+
+
+# Rearranging the columns as specified
+df = df[['order_id', 'customer_id', 'order_date', 'product_name', 'product_price', 'quantity']]
+
+# Display the first few rows to confirm the column order
+df.head(10)
+
+
+# Data Cleaning
+
+# Checking for missing values in the dataset
+missing_values = df.isnull().sum()
+
+# Checking for duplicate rows in the dataset
+duplicate_rows = df.duplicated().sum()
+
+# Displaying the results
+missing_values, duplicate_rows
+
+# Converting order_date to datetime format
+df['order_date'] = pd.to_datetime(df['order_date'], errors='coerce')
+
+# Checking if the conversion resulted in any NaT values, which would indicate conversion issues
+date_conversion_issues = df['order_date'].isna().sum()
+
+# Checking for negative or zero values in 'product_price' and 'quantity'
+negative_product_price = df[df['product_price'] <= 0].shape[0]
+negative_quantity = df[df['quantity'] <= 0].shape[0]
+
+# Display the results
+date_conversion_issues, negative_product_price, negative_quantity
+
+
+df.head()
+
+df.to_csv('orders_rearranged.csv', index=False)
+
+# Task 1
+
+# Convert 'order_date' to datetime format
+df['order_date'] = pd.to_datetime(df['order_date'])
+
+# Calculate total revenue for each order line
+df['total_revenue'] = df['product_price'] * df['quantity']
+
+# Extract month and year from 'order_date'
+df['month_year'] = df['order_date'].dt.to_period('M')
+
+# Group by month_year and sum the total_revenue
+monthly_revenue = df.groupby('month_year')['total_revenue'].sum().reset_index()
+
+# Display the monthly revenue
+print(monthly_revenue)
+
+# Task 2
+
+# Group by product_name and sum the total_revenue to get the revenue generated by each product
+product_revenue = df.groupby('product_name')['total_revenue'].sum().reset_index()
+
+# Sort the result by total_revenue in descending order
+product_revenue = product_revenue.sort_values(by='total_revenue', ascending=False)
+
+# Display the product revenue
+product_revenue
+
+# Task 3
+
+# Group by customer_id and sum the total_revenue to get the revenue generated by each customer
+customer_revenue = df.groupby('customer_id')['total_revenue'].sum().reset_index()
+
+# Sort the result by total_revenue in descending order
+customer_revenue = customer_revenue.sort_values(by='total_revenue', ascending=False)
+
+customer_revenue
+
+# Task 4
+
+# Group by customer_id and sum the total_revenue to get the revenue generated by each customer
+customer_revenue = df.groupby('customer_id')['total_revenue'].sum().reset_index()
+
+# Sort the result by total_revenue in descending order
+customer_revenue = customer_revenue.sort_values(by='total_revenue', ascending=False)
+
+# Select the top 10 customers by revenue
+top_10_customers = customer_revenue.head(10)
+
+# Display the top 10 customers
+print(top_10_customers)

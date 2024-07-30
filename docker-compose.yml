@@ -7,7 +7,17 @@ services:
     networks:
       - app-network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    environment:
+      - MYSQL_DATABASE=orders
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=rootpassword
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db_init:/docker-entrypoint-initdb.d
+      - ./task/orders.csv:/var/lib/mysql-files/orders.csv
 
   test:
     build:
@@ -15,7 +25,8 @@ services:
     networks:
       - app-network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: mysql:8
@@ -27,13 +38,15 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./db_init:/docker-entrypoint-initdb.d
-      - ./task/orders.csv:/var/lib/mysql-files/orders.csv
-    networks:
-      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u user -ppassword || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   db_data:
 
 networks:
   app-network:
-    driver: overlay
+    driver: bridge
