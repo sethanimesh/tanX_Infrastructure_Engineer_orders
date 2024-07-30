@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv('/task/orders.csv')
+df = pd.read_csv('/app/orders.csv')
 df.head()
 
 column_mapping = {
