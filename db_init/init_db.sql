@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 -- Load data from the CSV file
-LOAD DATA INFILE '/var/lib/mysql-files/orders.csv'
+LOAD DATA INFILE '/Users/animesh/Documents/Applications/tanX Complete/tanX/task/orders.csv'
 INTO TABLE orders
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'

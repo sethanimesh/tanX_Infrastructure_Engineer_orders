@@ -4,6 +4,6 @@ WORKDIR /app
 
 COPY . /app
 
-RUN pip install pandas numpy unittest
+RUN pip install pandas numpy
 
 CMD ["python", "-m", "unittest", "discover", "-s", "test", "-p", "*.py"]

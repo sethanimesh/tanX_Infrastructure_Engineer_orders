@@ -4,7 +4,7 @@ from customer_analysis import calculate_customer_revenue, top_customers
 from product_analysis import calculate_product_revenue
 
 def main():
-    df = load_data('orders.csv')
+    df = load_data('/task/orders.csv')
     df = generate_customer_ids(df)
     df = clean_data(df)
     save_data(df, 'orders_processed.csv')
