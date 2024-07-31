@@ -1,5 +1,5 @@
 
-# Online Store Revenue Analysis
+# Online Orders.csv
 
 ## Project Overview
 
@@ -124,5 +124,3 @@ This command stops and removes the containers, networks, and volumes created by 
 - **Data Integrity**: The provided `orders.csv` should be correctly formatted and contain valid data to avoid processing errors.
 
 - **Testing**: The `test` service uses Python's `unittest` framework to validate the data processing logic. Make sure all tests pass to ensure the correctness of your analysis.
-
-For further questions or contributions, please refer to the project's GitHub repository or contact the maintainer.
