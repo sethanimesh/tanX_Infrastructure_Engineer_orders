@@ -1,10 +1,12 @@
+import os
 import pandas as pd
 from order_processing import load_data, generate_customer_ids, clean_data, save_data
 from customer_analysis import calculate_customer_revenue, top_customers
 from product_analysis import calculate_product_revenue
 
 def main():
-    df = load_data('/app/orders.csv')
+    orders_csv_path = os.getenv('ORDERS_CSV_PATH', '/app/orders.csv')
+    df = pd.read_csv(orders_csv_path)   
     df = generate_customer_ids(df)
     df = clean_data(df)
     save_data(df, 'orders_processed.csv')

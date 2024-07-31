@@ -14,10 +14,11 @@ services:
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
       - MYSQL_ROOT_PASSWORD=rootpassword
+      - ORDERS_CSV_PATH=/app/orders.csv
     volumes:
+      - ./task/orders.csv:/app/orders.csv  # Mount orders.csv into the task container
       - db_data:/var/lib/mysql
       - ./db_init:/docker-entrypoint-initdb.d
-      - ./task/orders.csv:/var/lib/mysql-files/orders.csv
 
   test:
     build:
@@ -38,6 +39,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./db_init:/docker-entrypoint-initdb.d
+      - ./task/orders.csv:/app/orders.csv
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u user -ppassword || exit 1"]
       interval: 30s
